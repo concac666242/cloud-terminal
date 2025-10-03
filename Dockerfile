@@ -1,19 +1,17 @@
-# Dockerfile
-FROM debian:bookworm-slim
+# 使用 Ubuntu 22.04 作为基础镜像
+FROM ubuntu:22.04
 
-ENV DEBIAN_FRONTEND=noninteractive
-# Cài shellinabox và dọn cache apt
-RUN apt-get update \
- && apt-get install -y --no-install-recommends shellinabox \
- && rm -rf /var/lib/apt/lists/*
+# 安装 Shellinabox
+RUN apt-get update && \
+    apt-get install -y shellinabox && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Port nội bộ mà container sẽ lắng nghe (mặc định Render cung cấp $PORT)
-EXPOSE 8080
-ENV PORT=8080
+# 设置 root 用户的密码为 'root'
+RUN echo 'root:061103' | chpasswd
 
-# Chạy shellinaboxd ở foreground (--background=0) và tắt SSL (Render sẽ terminate TLS ở edge)
-# --no-beep : tắt âm bíp
-# --disable-ssl : vô hiệu hóa SSL bên trong container (Render xử lý TLS)
-# --port ${PORT} : lắng nghe cổng được Render chỉ định
-# -s /:LOGIN : publish dịch vụ login mặc định (hiển thị form login)
-CMD ["sh", "-c", "exec shellinaboxd --no-beep --disable-ssl --port ${PORT} --background=0 -s /:LOGIN"]
+# 暴露 22 端口
+EXPOSE 22
+
+# 启动 Shellinabox
+CMD ["/usr/bin/shellinaboxd", "-t", "-s", "/:LOGIN"]
